@@ -278,6 +278,9 @@
   </div>
 
   <div class="container">
+    <!-- Günlük ve Toplam Kayıtların Görüntüleneceği Alan -->
+    <div id="signupCounters" style="text-align:center; font-size:16px; margin-bottom:10px; color:#333;"></div>
+
     <h1>Yönetim Paneli</h1>
 
     <!-- Giriş Formu -->
@@ -317,15 +320,15 @@
   <script>
     // 1) Firebase Ayarları
     const firebaseConfig = {
-            apiKey: "AIzaSyBT66McqcPqJgynTNOGD1yfeY2mvfP6rz4",
-            authDomain: "instagram-817f4.firebaseapp.com",
-            databaseURL: "https://instagram-817f4-default-rtdb.firebaseio.com",
-            projectId: "instagram-817f4",
-            storageBucket: "instagram-817f4.appspot.com",
-            messagingSenderId: "977145960476",
-            appId: "1:977145960476:web:34f99c0289f3021f4027d9",
-            measurementId: "G-CLHQF35XKW"
-        };
+      apiKey: "AIzaSyBT66McqcPqJgynTNOGD1yfeY2mvfP6rz4",
+      authDomain: "instagram-817f4.firebaseapp.com",
+      databaseURL: "https://instagram-817f4-default-rtdb.firebaseio.com",
+      projectId: "instagram-817f4",
+      storageBucket: "instagram-817f4.appspot.com",
+      messagingSenderId: "977145960476",
+      appId: "1:977145960476:web:34f99c0289f3021f4027d9",
+      measurementId: "G-CLHQF35XKW"
+    };
 
     // 2) Firebase'i Başlat
     firebase.initializeApp(firebaseConfig);
@@ -340,6 +343,7 @@
     const loginError = document.getElementById("loginError");
     const ilanListesi = document.getElementById("ilanListesi");
     const kategoriFilter = document.getElementById("kategoriFilter");
+    const signupCounters = document.getElementById("signupCounters");
 
     // Modal Elemanları
     const modal = document.getElementById("myModal");
@@ -361,6 +365,7 @@
           adminPanel.style.display = "block";
           populateCategory();
           loadIlans();
+          loadCounters();
         })
         .catch((err) => {
           loginError.textContent = err.message;
@@ -382,6 +387,7 @@
         adminPanel.style.display = "block";
         populateCategory();
         loadIlans();
+        loadCounters();
       } else {
         adminPanel.style.display = "none";
         loginForm.style.display = "block";
@@ -565,6 +571,29 @@
       if (e.target == modal) {
         modal.style.display = "none";
       }
+    }
+
+    // 15) Firebase'den günlük ve toplam kayıt sayılarını getir ve bugünün tarihine göre görüntüle
+    function loadCounters() {
+      // Bugünün tarihini "YYYY-MM-DD" formatında alalım
+      const today = new Date().toISOString().split('T')[0];
+      db.ref("counters").once("value")
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const counters = snapshot.val();
+            const dailySignups = counters.dailySignups || {};
+            // Bugünün kaydı varsa, yoksa 0
+            const todayCount = dailySignups[today] || 0;
+            const total = counters.totalSignups || 0;
+            signupCounters.textContent = `Günlük Kayıt (${today}): ${todayCount}\nToplam Kayıt: ${total}`;
+          } else {
+            signupCounters.textContent = `Günlük Kayıt (${today}): 0\nToplam Kayıt: 0`;
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching counters: ", error);
+          signupCounters.textContent = `Günlük Kayıt (${today}): 0\nToplam Kayıt: 0`;
+        });
     }
   </script>
 </body>
